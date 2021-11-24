@@ -1,9 +1,9 @@
 import { readFileSync } from 'fs';
-import windows1252 from 'windows-1252';
+import { TextDecoder } from 'util';
 
 import Directory from './Directory';
 import File from './File';
-import { readInt24LE } from './utils';
+import { readInt24BE, readInt24LE } from './utils';
 
 enum PackageType {
     // Console signed
@@ -108,7 +108,11 @@ class Package {
             let basePosition = 0;
 
             this.pos = this.blockToOffset(currentBlock);
-            const currentBlockBuf = this.buffer.slice(this.pos, 0x1000);
+            const currentBlockBuf = this.buffer.slice(
+                this.pos,
+                this.pos + 0x1000
+            );
+            this.pos += 0x1000;
             for (let j = 0; j < 0x40; j++) {
                 basePosition = 0x40 * j;
                 if (currentBlockBuf.at(basePosition) === 0) {
@@ -124,7 +128,7 @@ class Package {
                     basePosition + nameBytesLen
                 );
                 this.pos += nameBytesLen;
-                const name = windows1252.decode(nameBytes.toString());
+                const name = new TextDecoder('windows-1252').decode(nameBytes);
                 this.pos = basePosition + 0x29;
                 const numBlocks = readInt24LE(currentBlockBuf, this.pos);
                 this.pos += 3;
@@ -243,7 +247,7 @@ class Package {
         const status = this.buffer.readInt8(this.pos) & 0xff;
         this.pos += 1;
 
-        const nextBlock = readInt24LE(this.buffer, this.pos);
+        const nextBlock = readInt24BE(this.buffer, this.pos);
         this.pos += 3;
 
         return {
