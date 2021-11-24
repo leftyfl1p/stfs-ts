@@ -14,7 +14,8 @@
     "prepublish": "npm run build",
     "build": "tsc",
     "test": "exit 0",
-    "lint": "eslint --fix '*/**/*.{js,ts,tsx}' --quiet --ignore-path ./.gitignore"
+    "lint": "eslint --fix '*/**/*.{js,ts,tsx}' --quiet --ignore-path ./.gitignore",
+    "prestart": "yarn run build"
   },
   "files": [
     "dist/"
@@ -29,5 +30,8 @@
     "eslint-plugin-simple-import-sort": "^7.0.0",
     "prettier": "^2.4.1",
     "typescript": "^4.5.2"
+  },
+  "dependencies": {
+    "windows-1252": "^3.0.2"
   }
 }

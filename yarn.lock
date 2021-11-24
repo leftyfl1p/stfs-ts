@@ -868,6 +868,11 @@ which@^2.0.1:
   dependencies:
     isexe "^2.0.0"
 
+windows-1252@^3.0.2:
+  version "3.0.2"
+  resolved "https://registry.yarnpkg.com/windows-1252/-/windows-1252-3.0.2.tgz#d93e7e6f6679d2d7a71cec44f5af64561e43d71e"
+  integrity sha512-5cxJSKEwl0u56v9opqMbJLlF7Q/yOmy+L04tcsGWSMmLQo0DLthFdJjZ8TiF6YF40vYQL3MuwSeXjznLtrpKeQ==
+
 word-wrap@^1.2.3:
   version "1.2.3"
   resolved "https://registry.yarnpkg.com/word-wrap/-/word-wrap-1.2.3.tgz#610636f6b1f703891bd34771ccb17fb93b47079c"
