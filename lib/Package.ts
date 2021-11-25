@@ -39,6 +39,13 @@ class Package {
     ];
     baseBlock: number;
 
+    static IsSTFS(path: string) {
+        const file = readFileSync(path);
+
+        const magic = file.slice(0, 4).toString();
+        return magic === 'CON ' || magic === 'LIVE' || magic === 'PIRS';
+    }
+
     constructor(path: string);
     constructor(buffer: Buffer);
     constructor(thing: unknown) {
@@ -287,11 +294,23 @@ class Package {
         return blockNum + adjust;
     }
 
-    static IsSTFS(path: string) {
-        const file = readFileSync(path);
+    // utils
+    getFile(path: string): File | undefined {
+        const parts = path.split('/');
+        let current = this.Root;
 
-        const magic = file.slice(0, 4).toString();
-        return magic === 'CON ' || magic === 'LIVE' || magic === 'PIRS';
+        for (let i = 0; i < parts.length - 1; i++) {
+            if (parts[i] === '') {
+                continue;
+            }
+
+            current = current.dirs[parts[i]];
+            if (!current) {
+                return undefined;
+            }
+        }
+
+        return current.files[parts[parts.length - 1]];
     }
 }
 
