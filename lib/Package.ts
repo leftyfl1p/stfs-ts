@@ -28,16 +28,16 @@ const ErrBadPkg = new Error('File is not valid STFS');
 class Package {
     type: PackageType;
     buffer: Buffer;
-    tableSizeShift = 0;
-    fileTableBlockCount = 0;
-    fileTableBlockNumber = 0;
-    fileCount = 0;
+    tableSizeShift: number;
+    fileTableBlockCount: number;
+    fileTableBlockNumber: number;
+    fileCount: number;
     Root: Directory;
     tableSpacing: number[][] = [
         [0xab, 0x718f, 0xfe7da], // type 0
         [0xac, 0x723a, 0xfd00b] // type 1
     ];
-    baseBlock = 0;
+    baseBlock: number;
 
     constructor(path: string);
     constructor(buffer: Buffer);
