@@ -38,7 +38,6 @@ class Package {
         [0xac, 0x723a, 0xfd00b] // type 1
     ];
     baseBlock = 0;
-    pos = 0;
 
     constructor(path: string) {
         this.buffer = readFileSync(path);
@@ -62,12 +61,12 @@ class Package {
                 throw ErrBadPkg;
         }
 
-        this.pos = 0x340;
-        if (this.buffer.length < this.pos + 4) {
+        let pos = 0x340;
+        if (this.buffer.length < pos + 4) {
             throw ErrBadPkg;
         }
 
-        const headerSize = this.buffer.readInt32BE(this.pos);
+        const headerSize = this.buffer.readInt32BE(pos);
 
         if (((headerSize + 0xfff) & 0xf000) >> 0xc == 0xb) {
             this.tableSizeShift = 0;
@@ -77,19 +76,19 @@ class Package {
             this.baseBlock = 0xa << 12;
         }
 
-        this.pos = 0x37c;
-        this.fileTableBlockCount = this.buffer.readInt16LE(this.pos);
-        this.pos += 2;
+        pos = 0x37c;
+        this.fileTableBlockCount = this.buffer.readInt16LE(pos);
+        pos += 2;
 
         if (this.fileTableBlockCount > 1) {
             throw ErrBadPkg;
         }
 
-        this.fileTableBlockNumber = readInt24LE(this.buffer, this.pos);
-        this.pos = 0x39d;
+        this.fileTableBlockNumber = readInt24LE(this.buffer, pos);
+        pos = 0x39d;
 
-        this.fileCount = this.buffer.readInt32LE(this.pos);
-        this.pos += 4;
+        this.fileCount = this.buffer.readInt32LE(pos);
+        pos += 4;
 
         this.Root = new Directory('/');
 
@@ -107,49 +106,46 @@ class Package {
             const currentBlock = fileTableBlocks[i];
             let basePosition = 0;
 
-            this.pos = this.blockToOffset(currentBlock);
-            const currentBlockBuf = this.buffer.slice(
-                this.pos,
-                this.pos + 0x1000
-            );
-            this.pos += 0x1000;
+            pos = this.blockToOffset(currentBlock);
+            const currentBlockBuf = this.buffer.slice(pos, pos + 0x1000);
+            pos += 0x1000;
             for (let j = 0; j < 0x40; j++) {
                 basePosition = 0x40 * j;
                 if (currentBlockBuf.at(basePosition) === 0) {
                     break;
                 }
-                this.pos = basePosition + 0x28;
-                const flags = currentBlockBuf.readInt8(this.pos);
-                this.pos = basePosition;
+                pos = basePosition + 0x28;
+                const flags = currentBlockBuf.readInt8(pos);
+                pos = basePosition;
 
                 const nameBytesLen = flags & 0x3f;
                 const nameBytes = currentBlockBuf.slice(
                     basePosition,
                     basePosition + nameBytesLen
                 );
-                this.pos += nameBytesLen;
+                pos += nameBytesLen;
                 const name = new TextDecoder('windows-1252').decode(nameBytes);
-                this.pos = basePosition + 0x29;
-                const numBlocks = readInt24LE(currentBlockBuf, this.pos);
-                this.pos += 3;
+                pos = basePosition + 0x29;
+                const numBlocks = readInt24LE(currentBlockBuf, pos);
+                pos += 3;
 
                 // unused/unknown
-                this.pos += 0x3;
+                pos += 0x3;
 
-                const startBlock = readInt24LE(currentBlockBuf, this.pos);
-                this.pos += 3;
+                const startBlock = readInt24LE(currentBlockBuf, pos);
+                pos += 3;
 
-                const parentDir = currentBlockBuf.readInt16BE(this.pos);
-                this.pos += 2;
+                const parentDir = currentBlockBuf.readInt16BE(pos);
+                pos += 2;
 
-                const size = currentBlockBuf.readUInt32BE(this.pos);
-                this.pos += 4;
+                const size = currentBlockBuf.readUInt32BE(pos);
+                pos += 4;
 
                 // unused: update
-                this.pos += 4;
+                pos += 4;
 
                 // unused: access
-                this.pos += 4;
+                pos += 4;
 
                 const parent = dirsOrdinal[parentDir];
                 if (!parent) {
@@ -231,24 +227,26 @@ class Package {
     getBlockHash(blockNum: number): BlockHash {
         const record = blockNum % 0xaa;
         let tableIndex =
-            (blockNum / 0xaa) * this.tableSpacing[this.tableSizeShift][0];
+            Math.floor(blockNum / 0xaa) *
+            this.tableSpacing[this.tableSizeShift][0];
         if (blockNum >= 0xaa) {
-            tableIndex += (blockNum / 0x70e4 + 1) << this.tableSizeShift;
+            tableIndex +=
+                (Math.floor(blockNum / 0x70e4) + 1) << this.tableSizeShift;
             if (blockNum >= 0x70e4) {
                 tableIndex += 1 << this.tableSizeShift;
             }
         }
 
-        this.pos = this.baseBlock + tableIndex * 0x1000 + record * 0x18;
+        let pos = this.baseBlock + tableIndex * 0x1000 + record * 0x18;
 
-        const hash = this.buffer.slice(this.pos, this.pos + 0x14);
-        this.pos += 0x14;
+        const hash = this.buffer.slice(pos, pos + 0x14);
+        pos += 0x14;
 
-        const status = this.buffer.readInt8(this.pos) & 0xff;
-        this.pos += 1;
+        const status = this.buffer.readInt8(pos) & 0xff;
+        pos += 1;
 
-        const nextBlock = readInt24BE(this.buffer, this.pos);
-        this.pos += 3;
+        const nextBlock = readInt24BE(this.buffer, pos);
+        pos += 3;
 
         return {
             index: blockNum,
@@ -270,11 +268,12 @@ class Package {
         let adjust = 0;
 
         if (blockNum >= 0xaa) {
-            adjust += (blockNum / 0xaa + 1) << this.tableSizeShift;
+            adjust += (Math.floor(blockNum / 0xaa) + 1) << this.tableSizeShift;
         }
 
         if (blockNum >= 0x70e4) {
-            adjust += (blockNum / 0x70e4 + 1) << this.tableSizeShift;
+            adjust +=
+                (Math.floor(blockNum / 0x70e4) + 1) << this.tableSizeShift;
         }
 
         return blockNum + adjust;
