@@ -39,8 +39,16 @@ class Package {
     ];
     baseBlock = 0;
 
-    constructor(path: string) {
-        this.buffer = readFileSync(path);
+    constructor(path: string);
+    constructor(buffer: Buffer);
+    constructor(thing: unknown) {
+        if (typeof thing === 'string') {
+            this.buffer = readFileSync(thing);
+        } else if (thing instanceof Buffer) {
+            this.buffer = thing;
+        } else {
+            throw new Error('Invalid argument');
+        }
 
         if (this.buffer.length < 0x4) {
             throw ErrBadPkg;
