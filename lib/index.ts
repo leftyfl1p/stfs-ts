@@ -1,3 +1,5 @@
-const test = 'hello';
+import Directory from './Directory';
+import File from './File';
+import Package from './Package';
 
-export { test };
+export { Package, Directory, File };

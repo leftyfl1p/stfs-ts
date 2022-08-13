@@ -1,7 +1,7 @@
 {
   "name": "stfs-ts",
-  "version": "1.0",
-  "description": "shared code",
+  "version": "1.0.0",
+  "description": "Library to parse and read(only) STFS files",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "author": "leftyfl1p",
